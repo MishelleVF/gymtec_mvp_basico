@@ -1,0 +1,4 @@
+student_id,fecha,dia,slot,aforo_predicho,ratio_ocupacion_predicho,nivel_ocupacion,score_recomendacion,ranking_recomendacion,razon_recomendacion
+DEMO_2026,2026-05-27,Martes,09:00,2,0.04,bajo,0.8314992066537866,1,Horario recomendado porque el estudiante está libre y el aforo esperado es bajo (2/50 personas).
+DEMO_2026,2026-05-27,Miércoles,09:00,3,0.06,bajo,0.8198158252244692,2,Horario recomendado porque el estudiante está libre y el aforo esperado es bajo (3/50 personas).
+DEMO_2026,2026-05-27,Jueves,09:00,3,0.06,bajo,0.8158984587874292,3,Horario recomendado porque el estudiante está libre y el aforo esperado es bajo (3/50 personas).

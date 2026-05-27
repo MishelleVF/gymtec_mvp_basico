@@ -1,0 +1,22 @@
+{
+  "model_kind": "ridge",
+  "n_train": 276,
+  "n_test": 94,
+  "mae": 0.032671722567747745,
+  "rmse": 0.04315301322309807,
+  "r2": 0.9272906197902279,
+  "ndcg_at_3": 0.9982920697508171,
+  "coef": {
+    "aforo_prom_hist": -0.09977037187446126,
+    "modalidad_predominante_presencial": -0.040922475137515894,
+    "modalidad_predominante_mixta": 0.04057240537754705,
+    "aforo_lag1": -0.03944946365801804,
+    "es_finde": -0.03726834657971547,
+    "carga_academica": 0.00485250480321187,
+    "ratio_libres": -0.004482329694260546,
+    "hora_dec": 0.003730173626565959,
+    "es_dia_academico": -0.0017166078427961512,
+    "dia_num": -0.0010526297213800683,
+    "modalidad_predominante_sin_clases": 0.00035006975996955647
+  }
+}

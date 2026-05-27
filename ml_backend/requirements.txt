@@ -1,0 +1,15 @@
+pandas
+numpy
+matplotlib
+scikit-learn
+seaborn
+plotly
+streamlit
+openpyxl
+python-dotenv
+joblib
+pyarrow
+xlrd
+lightgbm
+fastapi
+uvicorn[standard]

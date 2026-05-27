@@ -1,0 +1,36 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Environments
+.env
+.env.local
+.env.*.local
+
+# Data privada / pesada
+ml_backend/data/raw/
+ml_backend/data/interim/
+ml_backend/data/processed/*.parquet
+
+# Opcional: si los modelos son muy pesados, descomenta esto
+# ml_backend/models_artifacts/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
