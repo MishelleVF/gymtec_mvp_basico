@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # GYMTEC · Frontend (Next.js)
 
 App móvil para estudiantes UTEC que predice el aforo del gimnasio y recomienda horarios personalizados.
@@ -165,3 +166,14 @@ def explain(payload: ExplainRequest):
 - Paleta: `canvas #FAFAF7`, `ink-500 #185FA5`, verde/ámbar/rojo solo para codificar aforo.
 - Formato 24h en toda la app.
 - Persistencia local de `busy_slots` en `localStorage` con clave `gymtec.busySlots` mientras no exista backend.
+=======
+# gymtec_mvp_basico
+
+
+para empezar:
+
+unzip gymtec.zip && cd gymtec
+cp .env.example .env.local
+npm install
+npm run dev
+>>>>>>> 02c91563942f45bfae9a6a3e71b470bc04485ae3
