@@ -22,6 +22,22 @@ export const HOURS_FULL = Array.from({ length: 16 }, (_, i) => 7 + i);
 // Hours 09..18 for the weekly heatmap
 export const HOURS_HEATMAP = Array.from({ length: 10 }, (_, i) => 9 + i);
 
+// Gym operating hours
+export const GYM_HOURS: Record<DayCode, { open: number; close: number } | null> = {
+  L: { open: 6, close: 22 },
+  M: { open: 6, close: 22 },
+  X: { open: 6, close: 22 },
+  J: { open: 6, close: 22 },
+  V: { open: 6, close: 22 },
+  S: { open: 6, close: 13 }, // Saturday: 6am-1pm
+};
+
+export function isGymOpen(day: DayCode, hour: number): boolean {
+  const h = GYM_HOURS[day];
+  if (!h) return false;
+  return hour >= h.open && hour < h.close;
+}
+
 export function fmtHour(h: number) {
   return `${String(h).padStart(2, "0")}:00`;
 }

@@ -4,14 +4,13 @@ import {
   OccupancyLevel,
   WeeklyForecastPoint,
 } from "@/types/gymtec";
-import { DAYS, HOURS_HEATMAP, fmtHour, occupancyStyle } from "@/lib/utils";
+import { DAYS, HOURS_HEATMAP, fmtHour, occupancyStyle, isGymOpen } from "@/lib/utils";
 
 interface Props {
   points: WeeklyForecastPoint[];
 }
 
 export default function WeeklyHeatmap({ points }: Props) {
-  // Index for O(1) cell lookup
   const idx: Record<string, WeeklyForecastPoint | undefined> = {};
   for (const p of points) idx[`${p.day}|${p.time}`] = p;
 
@@ -36,8 +35,9 @@ export default function WeeklyHeatmap({ points }: Props) {
           return (
             <FragmentRow
               key={h}
+              hour={h}
               time={time}
-              cells={DAYS.map((d) => idx[`${d}|${time}`])}
+              cells={DAYS.map((d) => ({ point: idx[`${d}|${time}`], day: d }))}
             />
           );
         })}
@@ -58,17 +58,26 @@ export default function WeeklyHeatmap({ points }: Props) {
             </span>
           );
         })}
+        <span className="flex items-center gap-1.5">
+          <span
+            className="w-2.5 h-2.5 rounded-sm bg-neutral-300"
+            aria-hidden
+          />
+          Cerrado
+        </span>
       </div>
     </div>
   );
 }
 
 function FragmentRow({
+  hour,
   time,
   cells,
 }: {
+  hour: number;
   time: string;
-  cells: Array<WeeklyForecastPoint | undefined>;
+  cells: Array<{ point: WeeklyForecastPoint | undefined; day: DayCode }>;
 }) {
   return (
     <>
@@ -76,14 +85,24 @@ function FragmentRow({
         {time.slice(0, 2)}
       </div>
       {cells.map((c, i) => {
-        const level = c?.expected_occupancy ?? "Bajo";
+        const open = isGymOpen(c.day, hour);
+        if (!open) {
+          return (
+            <div
+              key={i}
+              className="h-[22px] rounded-md bg-neutral-300/60"
+              aria-label={`${time} ${c.day} Cerrado`}
+            />
+          );
+        }
+        const level = c.point?.expected_occupancy ?? "Bajo";
         const s = occupancyStyle(level);
         return (
           <div
             key={i}
             className="h-[22px] rounded-md"
             style={{ background: s.solidBg }}
-            aria-label={`${time} aforo ${level}`}
+            aria-label={`${time} ${c.day} aforo ${level}`}
           />
         );
       })}

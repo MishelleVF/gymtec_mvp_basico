@@ -15,12 +15,17 @@ import {
 } from "@/types/gymtec";
 import { STUDENT_ID, formatTodayLong, todayIso } from "@/lib/utils";
 import { getTodayRecommendations } from "@/services/gymtecApi";
+import { useGoogleAuth } from "@/context/GoogleAuthContext";
+import { loadPreferences } from "@/services/goalsApi";
+import Link from "next/link";
 
 export default function TodayPage() {
+  const gAuth = useGoogleAuth();
   const [data, setData] = useState<TodayRecommendationResponse | null>(null);
   const [source, setSource] = useState<DataSource>("live");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasPrefs, setHasPrefs] = useState(true); // default true to avoid flash
 
   async function load() {
     setLoading(true);
@@ -46,17 +51,18 @@ export default function TodayPage() {
 
   useEffect(() => {
     load();
+    setHasPrefs(!!loadPreferences());
   }, []);
 
   return (
     <MobileShell>
-      <header className="flex items-start justify-between mt-1">
+      <header className="flex items-start justify-between mt-1 animate-fade-in">
         <div>
           <div className="text-[11px] font-medium text-neutral-700">
             {formatTodayLong()}
           </div>
           <h1 className="text-base font-medium text-ink-900 mt-0.5">
-            Hola, estudiante
+            Hola, {gAuth.user?.name?.split(" ")[0] ?? "estudiante"} 👋
           </h1>
         </div>
         <button aria-label="Notificaciones" className="text-neutral-700">
@@ -104,6 +110,26 @@ export default function TodayPage() {
               />
             </div>
           </section>
+
+          {!hasPrefs && (
+            <Link
+              href="/goals"
+              className="mt-4 flex items-center gap-3 bg-gradient-to-r from-ink-500/5 to-transparent border border-ink-500/10 rounded-xl p-3.5 transition-colors hover:bg-ink-500/10"
+            >
+              <span className="text-2xl">🎯</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-medium text-ink-900">
+                  Personaliza tus recomendaciones
+                </div>
+                <div className="text-[11px] text-neutral-600">
+                  Configura tus objetivos y preferencias de entrenamiento
+                </div>
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4 text-ink-500 flex-shrink-0">
+                <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          )}
         </>
       )}
     </MobileShell>

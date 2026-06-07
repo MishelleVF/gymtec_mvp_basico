@@ -48,7 +48,7 @@ export default function RecommendationCard({
   }
 
   return (
-    <Card accent="primary" className="p-4">
+    <Card accent="primary" className="p-4 animate-slide-up">
       <div className="flex items-center justify-between">
         <Badge tone="primary">Recomendado para ti</Badge>
         <Badge tone="info">{confidencePct}% confianza</Badge>
@@ -63,7 +63,7 @@ export default function RecommendationCard({
 
       <hr className="my-3 border-black/5" />
 
-      <div className="flex gap-2 text-xs text-neutral-900 leading-relaxed">
+      <div className="flex gap-2 text-xs text-neutral-900 leading-relaxed bg-gold-700/5 rounded-lg p-2.5">
         <svg
           viewBox="0 0 24 24"
           fill="none"

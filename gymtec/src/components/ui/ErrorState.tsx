@@ -15,17 +15,22 @@ export default function ErrorState({
   return (
     <div
       role="alert"
-      className="bg-occ-highBg border border-occ-highBg rounded-card p-4 my-4"
+      className="bg-occ-highBg/50 border border-occ-highBg rounded-card p-4 my-4 animate-fade-in"
     >
-      <p className="text-sm font-medium text-occ-highFg">{title}</p>
-      <p className="text-xs text-occ-highFg/80 mt-1">{message}</p>
-      {onRetry && (
-        <div className="mt-3">
-          <Button variant="secondary" size="sm" onClick={onRetry}>
-            Reintentar
-          </Button>
+      <div className="flex gap-2.5 items-start">
+        <span className="text-lg flex-shrink-0">⚠️</span>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-occ-highFg">{title}</p>
+          <p className="text-[12px] text-occ-highFg/80 mt-1 leading-relaxed">{message}</p>
+          {onRetry && (
+            <div className="mt-3">
+              <Button variant="secondary" size="sm" onClick={onRetry}>
+                Reintentar
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

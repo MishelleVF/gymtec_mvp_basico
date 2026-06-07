@@ -2,9 +2,9 @@
 // Thin fetch wrapper. All HTTP details live here; gymtecApi.ts composes them.
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://127.0.0.1:8000";
 
-const DEFAULT_TIMEOUT_MS = 4000;
+const DEFAULT_TIMEOUT_MS = 8000;
 
 export class ApiError extends Error {
   status?: number;

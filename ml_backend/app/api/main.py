@@ -29,15 +29,19 @@ Para correrlo:
 from __future__ import annotations
 
 import logging
+import os
 import unicodedata
 from datetime import datetime
 from typing import Any
 
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
 from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+load_dotenv()
 
 from src.recommendation.recommend_schedule import (
     franjas_menor_aforo,
@@ -48,6 +52,9 @@ from src.utils.paths import (
     PREDICCIONES_AFORO_PARQUET,
 )
 
+from app.api.google_calendar import router as google_router
+from app.api.goals import router as goals_router
+
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -55,6 +62,9 @@ app = FastAPI(
     description="Predicción de aforo y recomendación de horarios para UTEC.",
     version="0.1.0",
 )
+
+app.include_router(google_router)
+app.include_router(goals_router)
 
 app.add_middleware(
     CORSMiddleware,

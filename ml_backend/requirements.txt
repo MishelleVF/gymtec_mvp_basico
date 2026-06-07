@@ -13,3 +13,4 @@ xlrd
 lightgbm
 fastapi
 uvicorn[standard]
+httpx
