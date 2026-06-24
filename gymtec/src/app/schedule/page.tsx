@@ -22,6 +22,10 @@ import {
 
 type InputMode = "manual" | "calendar";
 
+// Module-level flag: survives React StrictMode unmount/remount cycle.
+// Prevents the OAuth code from being sent to the backend twice.
+let _oauthCodeInFlight: string | null = null;
+
 export default function SchedulePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,15 +69,24 @@ export default function SchedulePage() {
 
   // ---------------------------------------------------------------------------
   // Handle OAuth callback (?code=…)
+  // Guard against double-execution in React StrictMode (code is single-use)
   // ---------------------------------------------------------------------------
   useEffect(() => {
     const code = searchParams.get("code");
     if (!code) return;
 
-    // Clean the URL
+    // Module-level guard: if this code is already being exchanged, skip.
+    if (_oauthCodeInFlight === code) return;
+    _oauthCodeInFlight = code;
+
+    // Clean the URL immediately
     const url = new URL(window.location.href);
     url.searchParams.delete("code");
     url.searchParams.delete("scope");
+    url.searchParams.delete("iss");
+    url.searchParams.delete("authuser");
+    url.searchParams.delete("hd");
+    url.searchParams.delete("prompt");
     window.history.replaceState({}, "", url.pathname);
 
     (async () => {
@@ -82,6 +95,8 @@ export default function SchedulePage() {
       try {
         await gAuth.connectWithCode(code);
       } catch (e) {
+        // Reset flag so user can retry
+        _oauthCodeInFlight = null;
         setError(
           e instanceof Error
             ? `Error al conectar Google Calendar: ${e.message}`
@@ -160,6 +175,17 @@ export default function SchedulePage() {
     setCalWeekLabel("");
     setCalEventsLoaded(false);
     setMode("manual");
+    setError(null);
+  }
+
+  function handleRetryGoogle() {
+    // If there's a Google-related error, disconnect and try again
+    if (error && error.toLowerCase().includes("google")) {
+      handleDisconnectGoogle();
+      setTimeout(() => handleConnectGoogle(), 300);
+    } else {
+      handleConnectGoogle();
+    }
   }
 
   function toggleCalEvent(eventId: string) {
@@ -452,8 +478,8 @@ export default function SchedulePage() {
           title="Ocurrió un error"
           message={error}
           onRetry={
-            mode === "calendar" && !gAuth.connected
-              ? handleConnectGoogle
+            error.toLowerCase().includes("google")
+              ? handleRetryGoogle
               : handleSave
           }
         />

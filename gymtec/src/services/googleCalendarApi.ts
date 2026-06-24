@@ -2,7 +2,7 @@
 // Google Calendar integration service.
 // All Google OAuth + Calendar API calls go through the backend to keep secrets safe.
 
-import { apiGet, apiPost } from "./api";
+import { apiGet, apiPost, apiGetGoogle, apiPostGoogle } from "./api";
 import {
   BusySlot,
   CalendarEvent,
@@ -22,18 +22,39 @@ import { fmtHour } from "@/lib/utils";
 
 /** Get the Google OAuth consent URL from the backend. */
 export async function getGoogleAuthUrl(): Promise<string> {
-  const res = await apiGet<GoogleAuthUrlResponse>("/api/v1/google/auth-url");
+  const res = await apiGetGoogle<GoogleAuthUrlResponse>("/api/v1/google/auth-url");
   return res.url;
 }
+
+// Deduplication: OAuth codes are single-use. If exchangeGoogleCode is called
+// twice with the same code (React StrictMode double-effect), reuse the same
+// in-flight promise so only ONE HTTP request reaches the backend.
+let _pendingExchange: Promise<GoogleTokenResponse> | null = null;
+let _pendingCode: string | null = null;
 
 /** Exchange an OAuth authorization code for an access token. */
 export async function exchangeGoogleCode(
   code: string
 ): Promise<GoogleTokenResponse> {
-  return apiPost<GoogleCallbackRequest, GoogleTokenResponse>(
+  if (_pendingCode === code && _pendingExchange) {
+    return _pendingExchange;
+  }
+
+  _pendingCode = code;
+  _pendingExchange = apiPostGoogle<GoogleCallbackRequest, GoogleTokenResponse>(
     "/api/v1/google/callback",
     { code }
   );
+
+  try {
+    const result = await _pendingExchange;
+    return result;
+  } catch (err) {
+    // Allow retry with a fresh code
+    _pendingCode = null;
+    _pendingExchange = null;
+    throw err;
+  }
 }
 
 /** Fetch calendar events for the current week. */
@@ -41,7 +62,7 @@ export async function fetchCalendarEvents(
   accessToken: string,
   weekStart?: string
 ): Promise<GoogleEventsResponse> {
-  return apiPost<GoogleEventsRequest, GoogleEventsResponse>(
+  return apiPostGoogle<GoogleEventsRequest, GoogleEventsResponse>(
     "/api/v1/google/events",
     { access_token: accessToken, week_start: weekStart }
   );
@@ -51,7 +72,7 @@ export async function fetchCalendarEvents(
 export async function fetchGoogleUserInfo(
   accessToken: string
 ): Promise<GoogleUserInfo> {
-  return apiPost<{ access_token: string }, GoogleUserInfo>(
+  return apiPostGoogle<{ access_token: string }, GoogleUserInfo>(
     "/api/v1/google/userinfo",
     { access_token: accessToken }
   );

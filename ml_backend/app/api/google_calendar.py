@@ -51,7 +51,39 @@ def _client_secret() -> str:
 
 
 def _redirect_uri() -> str:
+    """
+    Get the redirect URI from env.
+    
+    For development, we support multiple variations:
+    - http://localhost:3000/schedule
+    - http://127.0.0.1:3000/schedule
+    
+    This function returns the primary one from .env.
+    See _get_all_redirect_uris() for all variants.
+    """
     return os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:3000/schedule")
+
+
+def _get_all_redirect_uris() -> list[str]:
+    """
+    Get all variations of redirect URIs that Google should accept.
+    Helps with development when the same OAuth app is accessed from different hosts.
+    """
+    primary = _redirect_uri()
+    variants = [primary]
+    
+    # Add variations for localhost development
+    if "localhost" in primary:
+        # Add 127.0.0.1 variant
+        variants.append(primary.replace("localhost", "127.0.0.1"))
+    elif "127.0.0.1" in primary:
+        # Add localhost variant
+        variants.append(primary.replace("127.0.0.1", "localhost"))
+    
+    # Remove duplicates and trailing slashes
+    variants = list(set(uri.rstrip("/") for uri in variants))
+    
+    return variants
 
 
 # ---------------------------------------------------------------------------
@@ -177,7 +209,11 @@ async def _fetch_events(access_token: str, time_min: str, time_max: str) -> list
         resp = await client.get(url, params=params, headers=headers)
 
     if resp.status_code == 401:
-        raise HTTPException(401, "Google token expired or invalid")
+        logger.error("Google 401 Unauthorized. Token may be invalid, expired, or lack calendar.readonly scope. Response: %s", resp.text[:500])
+        raise HTTPException(401, "Google token expired or invalid. Try reconnecting with Google Calendar.")
+    if resp.status_code == 403:
+        logger.error("Google 403 Forbidden. May lack calendar.readonly scope or user revoked access. Response: %s", resp.text[:500])
+        raise HTTPException(403, "Permiso denegado. Verifica que el token tiene acceso a Google Calendar.")
     if resp.status_code != 200:
         logger.error("Google API error %s: %s", resp.status_code, resp.text[:500])
         raise HTTPException(502, "Error fetching Google Calendar events")
@@ -210,26 +246,50 @@ async def get_auth_url():
 @router.post("/callback", response_model=TokenResponse)
 async def exchange_code(body: CallbackRequest):
     """Exchange the OAuth authorization code for an access token."""
+    redirect_uri = _redirect_uri()
     payload = {
         "code": body.code,
         "client_id": _client_id(),
         "client_secret": _client_secret(),
-        "redirect_uri": _redirect_uri(),
+        "redirect_uri": redirect_uri,
         "grant_type": "authorization_code",
     }
 
+    logger.info("Exchanging code with redirect_uri=%s, code=%s...", redirect_uri, body.code[:20])
+    
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.post(GOOGLE_TOKEN_URL, data=payload)
 
-    if resp.status_code != 200:
-        logger.error("Token exchange failed %s: %s", resp.status_code, resp.text[:500])
-        raise HTTPException(400, "Failed to exchange authorization code")
-
-    data = resp.json()
-    return TokenResponse(
-        access_token=data["access_token"],
-        expires_in=data.get("expires_in", 3600),
-    )
+    if resp.status_code == 200:
+        data = resp.json()
+        logger.info("Successfully exchanged code for token")
+        return TokenResponse(
+            access_token=data["access_token"],
+            expires_in=data.get("expires_in", 3600),
+        )
+    
+    # Parse Google error
+    error_text = resp.text[:500]
+    logger.error("Token exchange failed (status=%s): %s", resp.status_code, error_text)
+    
+    error_msg = "Error desconocido de Google"
+    try:
+        err_json = resp.json()
+        google_error = err_json.get("error", "")
+        google_desc = err_json.get("error_description", "")
+        
+        if google_error == "invalid_grant":
+            error_msg = "El código de autorización expiró o ya fue usado. Intenta conectar de nuevo."
+        elif google_error == "redirect_uri_mismatch":
+            error_msg = f"redirect_uri no coincide. Backend usa: {redirect_uri}. Verifica Google Cloud Console."
+        elif google_desc:
+            error_msg = google_desc
+        elif google_error:
+            error_msg = google_error
+    except Exception:
+        error_msg = error_text[:200]
+    
+    raise HTTPException(400, error_msg)
 
 
 @router.post("/events", response_model=EventsResponse)
