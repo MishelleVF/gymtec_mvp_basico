@@ -12,7 +12,7 @@ Write-Host "Levantando backend en puerto 8000..." -ForegroundColor Yellow
 $backend = Start-Process `
     -FilePath "$root\.venv\Scripts\python.exe" `
     -ArgumentList "-m","uvicorn","app.api.main:app","--host","0.0.0.0","--port","8000" `
-    -WorkingDirectory "$root\ml_backend" `
+    -WorkingDirectory "$root\backend" `
     -PassThru
 Write-Host "  Backend PID: $($backend.Id)" -ForegroundColor Green
 
@@ -21,7 +21,7 @@ Write-Host "Levantando frontend en puerto 3000..." -ForegroundColor Yellow
 $frontend = Start-Process `
     -FilePath "npm.cmd" `
     -ArgumentList "run","dev","--","--port","3000" `
-    -WorkingDirectory "$root\gymtec" `
+    -WorkingDirectory "$root\frontend" `
     -PassThru
 Write-Host "  Frontend PID: $($frontend.Id)" -ForegroundColor Green
 
