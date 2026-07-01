@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # GYMTEC · Frontend (Next.js)
 
 App móvil para estudiantes UTEC que predice el aforo del gimnasio y recomienda horarios personalizados.
@@ -176,4 +175,3 @@ unzip gymtec.zip && cd gymtec
 cp .env.example .env.local
 npm install
 npm run dev
->>>>>>> 02c91563942f45bfae9a6a3e71b470bc04485ae3
